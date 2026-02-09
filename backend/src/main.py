@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 import crud
 
 # initializing the API
@@ -48,3 +49,7 @@ def delete_item(item_id: str):
     if not deleted:
         raise HTTPException(status_code=404, detail="Item not found")
     return {"deleted": True}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="localhost", port=8000)

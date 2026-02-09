@@ -1,3 +1,7 @@
+import React, { useEffect, useState } from 'react';
+import api from '../api.js';
+
+
 export default function FoodItem({ name, calories, carbs, protein, fats}) {
   return (
     <button className="
