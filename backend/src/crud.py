@@ -1,20 +1,28 @@
 import psycopg2
 import uuid
+from schemas import ItemsBase
 
-DATABASE_URL = "postgresql://postgres:ramyap06@localhost:5432/food_app"
+from dotenv import load_dotenv
+import os
 
-def row_to_dict(row):
-    return {
-        "id": row[0],
-        "name": row[1],
-        "dining_hall_id": row[2],
-        "calories": row[3],
-        "protein": row[4],
-        "carbs": row[5],
-        "fats": row[6],
-    }
+# Load the .env file
+load_dotenv()
 
-def post(item_dict: dict):
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+def row_to_obj(row):
+    item = ItemsBase(
+        row[0],
+        row[1],
+        row[2],
+        row[3],
+        row[4],
+        row[5],
+        row[6]
+    )
+    return item
+
+def post(item: ItemsBase):
     try:
         connection = psycopg2.connect(DATABASE_URL)
         cursor = connection.cursor()
@@ -24,22 +32,22 @@ def post(item_dict: dict):
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id, name, dining_hall_id, calories, protein, carbs, fats;
         """
-        item_id = str(uuid.uuid4())
+        item.item_id = int(uuid.uuid4())
 
         cursor.execute(query, (
-            item_id,
-            item_dict["name"],
-            item_dict["dining_hall_id"],
-            item_dict["calories"],
-            item_dict["protein"],
-            item_dict["carbs"],
-            item_dict["fats"],
+            item.item_id,
+            item.name,
+            item.dining_hall_id,
+            item.calories,
+            item.protein,
+            item.carbs,
+            item.fats
         ))
-        item = cursor.fetchone()
+        fetched_item = cursor.fetchone()
         connection.commit()
-        if item is None:
+        if fetched_item is None:
             return None
-        return row_to_dict(item)
+        return item
 
     finally:
         if connection:
@@ -47,7 +55,7 @@ def post(item_dict: dict):
             connection.close()
 
 
-def get(item_id: str):
+def get(item_id: int):
     try:
         connection = psycopg2.connect(DATABASE_URL)
         cursor = connection.cursor()
@@ -79,7 +87,7 @@ def get_all():
             print("protein  = ", row[4])
             print("carbs  = ", row[5])
             print("fats  = ", row[6], "\n")
-            item_dicts.append(row_to_dict(row))
+            item_dicts.append(row_to_obj(row))
         return item_dicts
     finally:
         if connection:
